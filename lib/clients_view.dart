@@ -1,7 +1,3 @@
-import 'dart:async' show Future;
-import 'dart:convert';
-
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter/material.dart';
 
 import 'client_model.dart';
@@ -14,29 +10,6 @@ import 'client_model.dart';
 
 // button full width
 // https://www.flutterbeads.com/full-width-button-in-flutter/
-
-Future<List<Client>> fetchClients() async {
-  String response;
-  response = await rootBundle.loadString("database/clients.json");
-
-  //print(response);
-
-  // https://api.flutter.dev/flutter/dart-convert/jsonDecode.html
-  dynamic json = jsonDecode(response);
-
-  // https://www.bezkoder.com/dart-list/
-  List<Client> list = [];
-
-  for (int i = 0; i < json.length; i++) {
-    var jsonClient = json[i];
-    var client = Client(name: jsonClient['name'], adresse: jsonClient["addr"]);
-    list.add(client);
-  }
-
-  print("found x${list.length} client(s)");
-
-  return list;
-}
 
 /// listing of clients
 /// using future
@@ -56,7 +29,7 @@ class PanelClients extends StatelessWidget {
         textAlign: TextAlign.center,
       )),
       body: FutureBuilder<List<Client>>(
-          future: fetchClients(),
+          future: ClientDb.fetchClients(),
           builder: (context, snapshot) {
             // on fetch finished
             if (snapshot.hasData) {
@@ -81,22 +54,27 @@ class PanelClients extends StatelessWidget {
               );
             }
           }),
+
+      // bottom right floating circle add button
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.pushNamed(context, PanelClientEdit.routeAdd);
         },
         backgroundColor: Colors.green,
-        child: const Icon(Icons.navigation),
+        child: const Icon(Icons.add_a_photo),
       ),
     );
   }
 }
 
+// tuto sur les TextField
+// https://blog.logrocket.com/the-ultimate-guide-to-text-fields-in-flutter/
+
 ///
 /// text edit, client & adresse
 ///
 class PanelClientEdit extends StatelessWidget {
-  const PanelClientEdit({super.key, this.state = ClientViewState.edit});
+  const PanelClientEdit({super.key, this.state = ClientViewState.none});
 
   final ClientViewState state;
 
@@ -109,10 +87,12 @@ class PanelClientEdit extends StatelessWidget {
 
     switch (state) {
       case ClientViewState.edit:
+        //context has client in arguments ?
+        //yes: given when clicked in parent view on client item
         cl = ModalRoute.of(context)!.settings.arguments as Client;
         break;
       case ClientViewState.add:
-        cl = const Client(name: "nouveau client", adresse: "adresse du client");
+        cl = Client(name: "nouveau client", addr: "adresse du client");
         break;
       default:
         print("NOT IMPLEM");
@@ -125,26 +105,19 @@ class PanelClientEdit extends StatelessWidget {
       );
     }
 
+    Client client = cl;
+
     return Scaffold(
         appBar: AppBar(title: const Text("Client")),
         body: ListView(
           children: [
             TextField(
-              decoration: InputDecoration(labelText: cl.name),
+              keyboardType: TextInputType.name,
+              decoration: InputDecoration(
+                  labelText: client.name, hintText: "name of the client"),
               onChanged: (text) {
+                client.name = text;
                 print("field changed to : $text");
-              },
-              onSubmitted: (text) {
-                print("field submited : $text");
-              },
-            ),
-            TextField(
-              decoration: InputDecoration(labelText: cl.adresse),
-              onChanged: (text) {
-                print("field changed to : $text");
-              },
-              onSubmitted: (text) {
-                print("field submited : $text");
               },
             ),
           ],

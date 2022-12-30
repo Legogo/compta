@@ -16,7 +16,7 @@ class PanelHomepage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print("homapge:build");
+    print("hompage:build");
 
     return Scaffold(
       appBar: AppBar(
